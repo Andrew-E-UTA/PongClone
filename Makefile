@@ -1,5 +1,5 @@
-SRC1 = pong.c
-SRC2 = game.c
+SRC1 = src/pong.c
+SRC2 = src/game.c
 SRCS = $(SRC1) $(SRC2)
 OBJ1 = $(SRC1:.c=.o)
 OBJ2 = $(SRC2:.c=.o)
@@ -11,6 +11,8 @@ GCCFLAGS    = -O1 -Wall -Werror -std=c99 -Wno-missing-braces
 
 $(EXE) : $(OBJS)
 	gcc -o $(EXE) $(OBJS) $(GCCFLAGS) $(RAYLIBFLAGS) 
-	rm *.o
+	rm src/*.o
+	
 $(OBJS) : $(SRCS)
 	gcc -c $(SRCS) $(GCCFLAGS) $(RAYLIBFLAGS) 
+	mv *.o src/

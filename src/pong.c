@@ -3,9 +3,9 @@
 #include <stdbool.h>
 #include <math.h>
 
-#include "./inc/raylib.h"
-#include "./inc/raymath.h"
-#include "./inc/game.h"
+#include "../inc/raylib.h"
+#include "../inc/raymath.h"
+#include "../inc/game.h"
 
 #define RAYATH_IMPLEMENTATION
 
