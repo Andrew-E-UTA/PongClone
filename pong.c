@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include <stdbool.h>
 #include <math.h>
 
@@ -16,11 +17,12 @@
 int main(void)
 {
     GameState state = {};
+    Menu menu = {};
     char scoreBuffer[3] = {};
     char congratsBuffer[15] = {};
     bool wasRestarted = false;
 
-    initGame(&state);
+    initGame(&state, &menu);
 
     //init Window
     InitWindow(CONFIG.screenWidth, CONFIG.screenHeight, "Pong");
@@ -38,8 +40,23 @@ int main(void)
         {
             case(PAUSED):
             {
-                if(IsKeyPressed(KEY_ENTER))
+                if(IsKeyPressed(KEY_ESCAPE))
                     state.currentScene = GAMEPLAY;
+                for(uint8_t i = 0; i < NUM_BUTTONS; i++)
+                    if(CheckCollisionPointRec(GetMousePosition(), menu.buttons[i].bounds)
+                    && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+                        switch(i)
+                        {
+                            case 0:
+                            {
+                                static bool buttonState = false;
+                                buttonState = !buttonState;
+                                CONFIG.BOT_DIFFICULTY = buttonState? BOT_HARD: BOT_EASY;
+                                strcpy(menu.buttons[0].text.str, CONFIG.BOT_DIFFICULTY != 0? "hard":"easy");
+                            }break;
+                            default:
+                                printf("[WARNING]: Invalid Button Value Pressed!!! (%d)\n", i);
+                        }
             }break;
             case(GAMEPLAY):
             {
@@ -59,15 +76,15 @@ int main(void)
                 BALL.position = Vector2Add(BALL.position, BALL.speed);
 
                 //Update P1 position
-                if(IsKeyDown(KEY_UP))
+                if(IsKeyDown(KEY_W))
                     P1.position.y -= CONFIG.PLAYER_SPEED;
-                if(IsKeyDown(KEY_DOWN))
+                if(IsKeyDown(KEY_S))
                     P1.position.y += CONFIG.PLAYER_SPEED;
 
                 //Update P2 position
-                if(BALL.position.y > P2.position.y + (CONFIG.PADDLE_HEIGHT - 5))
+                if(BALL.position.y > (P2.position.y + ((CONFIG.PADDLE_HEIGHT/2) + CONFIG.BOT_DIFFICULTY)))
                     P2.position.y += CONFIG.PLAYER_SPEED;
-                else if(BALL.position.y < P2.position.y + 5)
+                else if(BALL.position.y < (P2.position.y + ((CONFIG.PADDLE_HEIGHT/2) - CONFIG.BOT_DIFFICULTY)))
                     P2.position.y -= CONFIG.PLAYER_SPEED;
 
                 //Gameplay Updates=====================================================
@@ -81,7 +98,6 @@ int main(void)
                 if(BALL.position.x - CONFIG.BALL_RADIUS <= CONFIG.PADDLE_WIDTH)
                 {
                     int8_t diffY = BALL.position.y - (P1.position.y + CONFIG.PADDLE_HEIGHT/2);
-                    printf("DIFF = %d\n", diffY);
                     if(abs(diffY) <= CONFIG.PADDLE_HEIGHT/2)
                     {
                         BALL.speed.x *= -1;
@@ -95,7 +111,6 @@ int main(void)
                 else if(BALL.position.x + CONFIG.BALL_RADIUS >= CONFIG.screenWidth - CONFIG.PADDLE_WIDTH)
                 {
                     int8_t diffY = BALL.position.y - (P2.position.y + CONFIG.PADDLE_HEIGHT/2);
-                    printf("DIFF = %d\n", diffY);
                     if(abs(diffY) <= CONFIG.PADDLE_HEIGHT/2)
                     {
                         BALL.speed.x *= -1;
@@ -130,8 +145,9 @@ int main(void)
             {
                 ClearBackground(LIGHTGRAY);
                 DrawText("PONG", CONFIG.screenWidth/2 - 50, CONFIG.screenHeight/2 - 2*50, 50, BLACK);
-                DrawText("Press [Enter] to unpause", CONFIG.screenWidth/2 - 5*CONFIG.TEXT_SIZE, CONFIG.screenHeight/2, CONFIG.TEXT_SIZE, DARKGRAY);
-                //TODO: button for bot difficulty
+                DrawText("Press [ESC] to unpause", CONFIG.screenWidth/2 - 5*CONFIG.TEXT_SIZE, CONFIG.screenHeight/2, CONFIG.TEXT_SIZE, DARKGRAY);
+                for(uint8_t i = 0; i < NUM_BUTTONS; i++)
+                    drawButton(&menu.buttons[i]);
 
             }break;
             case(GAMEPLAY):
@@ -158,7 +174,7 @@ int main(void)
         }
         EndDrawing();
     }
-
+    closeGame(&menu);
     CloseWindow();
     return 0;
 }
